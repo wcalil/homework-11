@@ -46,9 +46,11 @@ function start() {
       else if (answer.company === "View employee") {
         viewEmployee();
       }
+      else if (answer.company === "Update employee information") {
+        updateEmployee();
+      }
     });
 }
-
 function addDepartment() {
   inquirer
     .prompt([
@@ -72,7 +74,6 @@ function addDepartment() {
       );
     });
 }
-
 function addEmployee() {
   let roles = []
   let employees = []
@@ -129,7 +130,6 @@ function addEmployee() {
     })
   })
 }
-
 function addRole() {
   let departments = []
   connection.query("select * from department", function (err, res) {
@@ -172,7 +172,6 @@ function addRole() {
       });
   })
 }
-
 function viewDepartment() {
   var query = "SELECT * FROM department";
   connection.query(query, function (err, res) {
@@ -183,7 +182,6 @@ function viewDepartment() {
     start();
   });
 };
-
 function viewRole() {
   var query = "SELECT * FROM role";
   connection.query(query, function (err, res) {
@@ -194,7 +192,6 @@ function viewRole() {
     start();
   });
 };
-
 function viewEmployee() {
   var query = "SELECT * FROM employee";
   connection.query(query, function (err, res) {
@@ -205,3 +202,35 @@ function viewEmployee() {
     start();
   });
 };
+function updateEmployee() {
+  var query = "SELECT * FROM employee";
+  var employeeList = []
+  var roleList = []
+  connection.query(query, function (err, res) {
+    if (err) throw err;
+    res.forEach((item) => {employeeList.push({name: `${item.first_name} ${item.last_name}`, value: item.id})});
+    connection.query("SELECT * FROM role", function (err, res) {
+      res.forEach((item) => {roleList.push({name: item.title, value: item.id})});
+      inquirer.prompt([
+        {
+          name: 'employee',
+          type: "list",
+          message: "Which employee would you like to update?",
+          choices: employeeList
+        },
+        {
+          name: 'role',
+          type: 'list',
+          message: 'New role for employeee:',
+          choices: roleList
+        }
+      ]).then((ans) => {
+        connection.query(`UPDATE employee SET role_id = ${ans.role} WHERE id = ${ans.employee}`,(err, res) => {
+          if (err) throw err;
+          console.log("success!");
+          start()
+        })
+      })
+    })
+  })
+}
